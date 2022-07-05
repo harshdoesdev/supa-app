@@ -1,6 +1,6 @@
 {
   "name": "supa-app",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Supa small React-like View Library",
   "main": "dist/index.js",
   "files": [
