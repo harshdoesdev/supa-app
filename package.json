@@ -1,0 +1,22 @@
+{
+  "name": "supa-app",
+  "version": "0.0.1",
+  "description": "A Supa small React-like View Library",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build"
+  },
+  "keywords": [
+    "reactive",
+    "vdom",
+    "vitrual",
+    "dom",
+    "view"
+  ],
+  "author": "Harsh Singh",
+  "license": "MIT"
+}
