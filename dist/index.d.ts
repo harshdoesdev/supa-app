@@ -1,5 +1,5 @@
-export function runApp({ el, store, view, subscriptions }: {
-    el: any;
+export function runApp({ node, store, view, subscriptions }: {
+    node: any;
     store: any;
     view: any;
     subscriptions: any;
