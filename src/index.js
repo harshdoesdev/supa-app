@@ -22,9 +22,7 @@ const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) =
     });
 };
 
-export function runApp({ el, store, view, subscriptions }) {
-    const rootNode = document.querySelector(el);
-
+export function runApp({ node, store, view, subscriptions }) {
     const dispatch = store.dispatch.bind(store);
 
     let prevSubscriptions = [];
@@ -42,9 +40,13 @@ export function runApp({ el, store, view, subscriptions }) {
 
         const newTree = view(currentState, dispatch);
 
-        patch(rootNode, oldTree, newTree);
+        patch(node, oldTree, newTree);
 
         oldTree = newTree;
+
+        if(typeof subscriptions !== 'function') {
+            return;
+        }
 
         prevSubscriptions = patchSubscriptions(
             prevSubscriptions,
