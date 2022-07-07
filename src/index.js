@@ -25,18 +25,22 @@ const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) =
 export function runApp({ el, store, view, subscriptions }) {
     const rootNode = document.querySelector(el);
 
+    const dispatch = store.dispatch.bind(store);
+
     let prevSubscriptions = [];
 
     let oldTree = null;
 
-    function dispatch(action) {
-        store.dispatch(action);
+    store.subscribe(render);
 
-        requestAnimationFrame(update);
+    function render() {
+        requestAnimationFrame(update)
     }
 
     function update() {
-        const newTree = view(store.currentState, dispatch);
+        const currentState = store.currentState;
+
+        const newTree = view(currentState, dispatch);
 
         patch(rootNode, oldTree, newTree);
 
@@ -44,10 +48,10 @@ export function runApp({ el, store, view, subscriptions }) {
 
         prevSubscriptions = patchSubscriptions(
             prevSubscriptions,
-            subscriptions(store.currentState),
+            subscriptions(currentState),
             dispatch
         );
     }
 
-    update();
+    render();
 }

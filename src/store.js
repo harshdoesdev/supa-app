@@ -6,13 +6,29 @@ class Store {
 
     #isDispatching = false
 
+    #subscribers = new Set()
+
     get currentState() {
         return this.#state;
+    }
+
+    set currentState(_value) {
+        throw new Error(`Can't set current state directly.`);
     }
 
     constructor(reducer, initialState) {
         this.reducer = reducer;
         this.#state = deepFreeze(initialState);
+    }
+
+    subscribe(subscriber) {
+        this.#subscribers.add(subscriber);
+
+        return () => this.unsubscribe(subscriber);
+    }
+
+    unsubscribe(subscriber) {
+        this.#subscribers.delete(subscriber);
     }
 
     dispatch(action) {
@@ -33,6 +49,8 @@ class Store {
         } finally {
             this.#isDispatching = false;
         }
+
+        this.#subscribers.forEach(subscriber => subscriber(this.currentState));
 
         return action;
     }
