@@ -1,6 +1,6 @@
-import { h, patch, text } from "./vdom.js";
+import { h, patch, text, svg } from "./vdom.js";
 
-export { h, text };
+export { h, text, svg };
 
 export { createStore } from './store.js';
 
