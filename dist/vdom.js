@@ -1,17 +1,43 @@
 const TEXT_NODE = '#text';
+const ns = 'http://www.w3.org/2000/svg';
+const EVENT_LISTENER_RGX = /^on/;
 export const h = (type, props = {}, ...children) => ({ type, props, children });
+export const svg = (type, props = {}, ...children) => ({ type, props, children, isSvg: true });
 export const text = data => ({ type: TEXT_NODE, data });
-const setProp = (node, key, value) => {
+const strToClassList = str => str.trim().split(/\s+/);
+const patchClassList = (node, oldClassList, newClassList) => {
+    const classes = [...oldClassList, ...newClassList];
+    for (let i = 0; i < classes.length; i++) {
+        const className = classes[i];
+        if (!oldClassList.includes(className)) {
+            node.classList.add(className);
+        }
+        else if (!newClassList.includes(className)) {
+            node.classList.remove(className);
+        }
+    }
+};
+const setProp = (node, key, value, isSvg = false) => {
     if (key === 'key') {
     }
     else if (value == null || value === false) {
         node.removeAttribute(key);
     }
     else {
-        node[key] = value;
+        if (isSvg) {
+            if (EVENT_LISTENER_RGX.test(key)) {
+                node[key] = value;
+            }
+            else {
+                node.setAttribute(key, value);
+            }
+        }
+        else {
+            node[key] = value;
+        }
     }
 };
-const createDomNode = vnode => {
+const createDomNode = (vnode) => {
     if (!vnode) {
         return;
     }
@@ -21,9 +47,11 @@ const createDomNode = vnode => {
         return textNode;
     }
     const { type, props, children } = vnode;
-    const node = document.createElement(type);
+    const node = vnode.isSvg
+        ? document.createElementNS(ns, type)
+        : document.createElement(type);
     for (const [key, value] of Object.entries(props)) {
-        setProp(node, key, value);
+        setProp(node, key, value, vnode.isSvg);
     }
     const fragment = document.createDocumentFragment();
     children.forEach(vChild => {
@@ -64,7 +92,12 @@ const patchProps = (node, oldProps, newProps) => {
         if (Reflect.has(newProps, key)) {
             const oldValue = oldProps[key];
             if (oldValue !== value) {
-                setProp(node, key, value);
+                if (key === 'className') {
+                    patchClassList(node, strToClassList(oldValue), strToClassList(value));
+                }
+                else {
+                    setProp(node, key, value);
+                }
             }
         }
         else {

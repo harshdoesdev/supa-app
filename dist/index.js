@@ -1,5 +1,5 @@
-import { h, patch, text } from "./vdom.js";
-export { h, text };
+import { h, patch, text, svg } from "./vdom.js";
+export { h, text, svg };
 export { createStore } from './store.js';
 const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) => {
     return currentSubscriptions.map((subscribe, i) => {
