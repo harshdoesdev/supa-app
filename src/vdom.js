@@ -64,7 +64,7 @@ const patchChildren = (node, oldChildren, newChildren) => {
         const newChild = newChildren[i];
 
         if(oldChild) {
-            patch(oldChild, newChild);
+            patch(node, oldChild, newChild);
         } else if(newChild) {
             const nodeChild = children[i];
             const newChildNode = createDomNode(newChild);
@@ -94,8 +94,14 @@ const patchProps = (node, oldProps, newProps) => {
     }
 };
 
-export const patch = (oldTree, newTree) => {
-    if(!newTree) {
+export const patch = (rootNode, oldTree, newTree) => {
+    if(!oldTree && newTree) {
+        const node = createDomNode(newTree);
+
+        rootNode.appendChild(node);
+
+        newTree.node = node;
+    } else if(!newTree) {
         if(oldTree.type !== TEXT_NODE) {
             let child;
             while(child = oldTree.node.lastChild) {
@@ -106,8 +112,6 @@ export const patch = (oldTree, newTree) => {
         oldTree.node.remove();
 
         oldTree.node = null;
-
-        return;
     } else if(
         oldTree.type === TEXT_NODE && 
         newTree.type === TEXT_NODE
@@ -115,6 +119,8 @@ export const patch = (oldTree, newTree) => {
         if(oldTree.data !== newTree.data) {
             oldTree.node.data = newTree.data;
         }
+
+        newTree.node = oldTree.node;
     } else if(
         oldTree.type === newTree.type && 
         oldTree.key === newTree.key
@@ -126,17 +132,17 @@ export const patch = (oldTree, newTree) => {
         );
 
         patchProps(oldTree.node, oldTree.props, newTree.props);
+
+        newTree.node = oldTree.node;
     } else {
         const newNode = createDomNode(newTree);
 
-        oldTree.node.replaceWith(newNode);
+        rootNode.insertBefore(newNode, oldTree.node);
+
+        oldTree.node.remove();
+        
+        oldTree.node = null;
+
+        newTree.node = newNode;
     }
-
-    newTree.node = oldTree.node;
-};
-
-export const mount = (vTree, rootNode) => {
-    const node = createDomNode(vTree);
-
-    rootNode.appendChild(node);
 };

@@ -6,3 +6,6 @@ export const deepFreeze = obj => {
     });
     return Object.freeze(obj);
 };
+const objProto = {};
+export const isPlainObj = v => objProto.toString.call(v) === '[object Object]';
+export const kindOf = v => typeof v;

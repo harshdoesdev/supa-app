@@ -1,9 +1,10 @@
-export function runApp({ el, state, actions, view }: {
+export function runApp({ el, store, view, subscriptions }: {
     el: any;
-    state: any;
-    actions: any;
+    store: any;
     view: any;
+    subscriptions: any;
 }): void;
+export { createStore } from "./store.js";
 import { h } from "./vdom.js";
 import { text } from "./vdom.js";
 export { h, text };

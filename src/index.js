@@ -1,31 +1,53 @@
-import { h, mount, patch, text } from "./vdom.js";
-import { deepFreeze } from "./util.js";
+import { h, patch, text } from "./vdom.js";
 
 export { h, text };
 
-export function runApp({ el, state, actions, view }) {
-    let currentState = deepFreeze(state);
+export { createStore } from './store.js';
+
+const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) => {
+   return currentSubscriptions.map((subscribe, i) => {
+        const unsubscribe = prevSubscriptions[i];
+
+        if(
+            unsubscribe && 
+            unsubscribe !== true && 
+            !subscribe
+        ) {
+            unsubscribe();
+        } else if(subscribe && !unsubscribe) {
+            return subscribe(dispatch);
+        } else if(subscribe && unsubscribe) {
+            return unsubscribe;
+        }
+    });
+};
+
+export function runApp({ el, store, view, subscriptions }) {
+    const rootNode = document.querySelector(el);
+
+    let prevSubscriptions = [];
 
     let oldTree = null;
 
-    function dispatch({ type, payload }) {
-        const action = actions[type];
-        const frozenState = deepFreeze(currentState);
+    function dispatch(action) {
+        store.dispatch(action);
 
-        update(action(frozenState, payload));
+        requestAnimationFrame(update);
     }
 
-    function update(newState) {
-        const newTree = view(newState, dispatch);
-    
-        patch(oldTree, newTree);
+    function update() {
+        const newTree = view(store.currentState, dispatch);
+
+        patch(rootNode, oldTree, newTree);
 
         oldTree = newTree;
 
-        currentState = newState;
+        prevSubscriptions = patchSubscriptions(
+            prevSubscriptions,
+            subscriptions(store.currentState),
+            dispatch
+        );
     }
 
-    oldTree = view(currentState, dispatch);
-    
-    mount(oldTree, document.querySelector(el));
+    update();
 }
