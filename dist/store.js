@@ -9,17 +9,28 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _Store_state, _Store_isDispatching;
+var _Store_state, _Store_isDispatching, _Store_subscribers;
 import { deepFreeze, isPlainObj, kindOf } from "./util.js";
 class Store {
     constructor(reducer, initialState) {
         _Store_state.set(this, null);
         _Store_isDispatching.set(this, false);
+        _Store_subscribers.set(this, new Set());
         this.reducer = reducer;
         __classPrivateFieldSet(this, _Store_state, deepFreeze(initialState), "f");
     }
     get currentState() {
         return __classPrivateFieldGet(this, _Store_state, "f");
+    }
+    set currentState(_value) {
+        throw new Error(`Can't set current state directly.`);
+    }
+    subscribe(subscriber) {
+        __classPrivateFieldGet(this, _Store_subscribers, "f").add(subscriber);
+        return () => this.unsubscribe(subscriber);
+    }
+    unsubscribe(subscriber) {
+        __classPrivateFieldGet(this, _Store_subscribers, "f").delete(subscriber);
     }
     dispatch(action) {
         if (!isPlainObj(action)) {
@@ -36,8 +47,9 @@ class Store {
         finally {
             __classPrivateFieldSet(this, _Store_isDispatching, false, "f");
         }
+        __classPrivateFieldGet(this, _Store_subscribers, "f").forEach(subscriber => subscriber(this.currentState));
         return action;
     }
 }
-_Store_state = new WeakMap(), _Store_isDispatching = new WeakMap();
+_Store_state = new WeakMap(), _Store_isDispatching = new WeakMap(), _Store_subscribers = new WeakMap();
 export const createStore = (reducer, initialState) => new Store(reducer, initialState);
