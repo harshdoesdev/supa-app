@@ -67,19 +67,21 @@ const createDomNode = (vnode) => {
         setProp(node, key, value, vnode.isSvg);
     }
 
-    const fragment = document.createDocumentFragment();
+    if(children.length) {
+        const fragment = document.createDocumentFragment();
 
-    children.forEach(vChild => {
-        if(!vChild) {
-            return;
-        }
+        children.forEach(vChild => {
+            if(!vChild) {
+                return;
+            }
 
-        const childNode = createDomNode(vChild);
+            const childNode = createDomNode(vChild);
 
-        fragment.appendChild(childNode);
-    });
+            fragment.appendChild(childNode);
+        });
 
-    node.appendChild(fragment);
+        node.appendChild(fragment);
+    }
 
     vnode.node = node;
 
@@ -110,7 +112,7 @@ const patchChildren = (node, oldChildren, newChildren) => {
     }
 };
 
-const patchProps = (node, oldProps, newProps) => {
+const patchProps = (node, oldProps, newProps, isSvg = false) => {
     const props = { ...oldProps, ...newProps };
 
     for(const [key, value] of Object.entries(props)) {
@@ -125,7 +127,7 @@ const patchProps = (node, oldProps, newProps) => {
                         strToClassList(value)
                     );
                 } else {
-                    setProp(node, key, value);
+                    setProp(node, key, value, isSvg);
                 }
             }
         } else {
@@ -162,7 +164,7 @@ export const patch = (rootNode, oldTree, newTree) => {
 
         newTree.node = oldTree.node;
     } else if(
-        oldTree.type === newTree.type && 
+        oldTree.type === newTree.type &&
         oldTree.key === newTree.key
     ) {
         patchChildren(
@@ -171,7 +173,12 @@ export const patch = (rootNode, oldTree, newTree) => {
             newTree.children
         );
 
-        patchProps(oldTree.node, oldTree.props, newTree.props);
+        patchProps(
+            oldTree.node, 
+            oldTree.props, 
+            newTree.props, 
+            newTree.isSvg
+        );
 
         newTree.node = oldTree.node;
     } else {

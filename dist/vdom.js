@@ -53,15 +53,17 @@ const createDomNode = (vnode) => {
     for (const [key, value] of Object.entries(props)) {
         setProp(node, key, value, vnode.isSvg);
     }
-    const fragment = document.createDocumentFragment();
-    children.forEach(vChild => {
-        if (!vChild) {
-            return;
-        }
-        const childNode = createDomNode(vChild);
-        fragment.appendChild(childNode);
-    });
-    node.appendChild(fragment);
+    if (children.length) {
+        const fragment = document.createDocumentFragment();
+        children.forEach(vChild => {
+            if (!vChild) {
+                return;
+            }
+            const childNode = createDomNode(vChild);
+            fragment.appendChild(childNode);
+        });
+        node.appendChild(fragment);
+    }
     vnode.node = node;
     return node;
 };
@@ -86,7 +88,7 @@ const patchChildren = (node, oldChildren, newChildren) => {
         }
     }
 };
-const patchProps = (node, oldProps, newProps) => {
+const patchProps = (node, oldProps, newProps, isSvg = false) => {
     const props = Object.assign(Object.assign({}, oldProps), newProps);
     for (const [key, value] of Object.entries(props)) {
         if (Reflect.has(newProps, key)) {
@@ -96,7 +98,7 @@ const patchProps = (node, oldProps, newProps) => {
                     patchClassList(node, strToClassList(oldValue), strToClassList(value));
                 }
                 else {
-                    setProp(node, key, value);
+                    setProp(node, key, value, isSvg);
                 }
             }
         }
@@ -131,7 +133,7 @@ export const patch = (rootNode, oldTree, newTree) => {
     else if (oldTree.type === newTree.type &&
         oldTree.key === newTree.key) {
         patchChildren(oldTree.node, oldTree.children, newTree.children);
-        patchProps(oldTree.node, oldTree.props, newTree.props);
+        patchProps(oldTree.node, oldTree.props, newTree.props, newTree.isSvg);
         newTree.node = oldTree.node;
     }
     else {
