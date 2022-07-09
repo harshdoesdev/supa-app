@@ -1,3 +1,4 @@
+import { isFn } from "./util.js";
 import { h, patch, text, svg } from "./vdom.js";
 export { h, text, svg };
 export { createStore } from './store.js';
@@ -17,23 +18,47 @@ const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) =
         }
     });
 };
-export function runApp({ node, store, view, subscriptions }) {
+function shouldRunEffect(prevFxDependencies, dependencies, effectId) {
+    if (!prevFxDependencies) {
+        return true;
+    }
+    return dependencies.every((dependency, depId) => {
+        const oldDependency = prevFxDependencies[effectId][depId];
+        return oldDependency !== dependency;
+    });
+}
+export function runApp({ node, store, view, effects, subscriptions }) {
     const dispatch = store.dispatch.bind(store);
-    let prevSubscriptions = [];
+    let prevSubscriptions = [], prevFxDependencies = null;
     let oldTree = null;
     store.subscribe(render);
     function render() {
         requestAnimationFrame(update);
+    }
+    function updateEffects(currentState) {
+        const currentEffects = effects(currentState);
+        prevFxDependencies = currentEffects.map(([effect, ...dependencies], effectId) => {
+            const shouldRun = shouldRunEffect(prevFxDependencies, dependencies, effectId);
+            if (shouldRun) {
+                effect(...dependencies);
+            }
+            return dependencies;
+        });
+    }
+    function updateSubscriptions(currentState) {
+        prevSubscriptions = patchSubscriptions(prevSubscriptions, subscriptions(currentState), dispatch);
     }
     function update() {
         const currentState = store.currentState;
         const newTree = view(currentState, dispatch);
         patch(node, oldTree, newTree);
         oldTree = newTree;
-        if (typeof subscriptions !== 'function') {
-            return;
+        if (isFn(effects)) {
+            updateEffects(currentState);
         }
-        prevSubscriptions = patchSubscriptions(prevSubscriptions, subscriptions(currentState), dispatch);
+        if (isFn(subscriptions)) {
+            updateSubscriptions(currentState);
+        }
     }
     render();
 }

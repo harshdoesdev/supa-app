@@ -9,3 +9,4 @@ export const deepFreeze = obj => {
 const objProto = {};
 export const isPlainObj = v => objProto.toString.call(v) === '[object Object]';
 export const kindOf = v => typeof v;
+export const isFn = v => kindOf(v) === 'function';

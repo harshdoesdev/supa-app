@@ -1,7 +1,8 @@
-export function runApp({ node, store, view, subscriptions }: {
+export function runApp({ node, store, view, effects, subscriptions }: {
     node: any;
     store: any;
     view: any;
+    effects: any;
     subscriptions: any;
 }): void;
 export { createStore } from "./store.js";

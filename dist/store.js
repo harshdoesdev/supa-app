@@ -10,12 +10,15 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _Store_state, _Store_isDispatching, _Store_subscribers;
-import { deepFreeze, isPlainObj, kindOf } from "./util.js";
+import { deepFreeze, isFn, isPlainObj, kindOf } from "./util.js";
 class Store {
     constructor(reducer, initialState) {
         _Store_state.set(this, null);
         _Store_isDispatching.set(this, false);
         _Store_subscribers.set(this, new Set());
+        if (!isFn(reducer)) {
+            throw new Error(`Reducer must be a function. Instead got: ${kindOf(reducer)}`);
+        }
         this.reducer = reducer;
         __classPrivateFieldSet(this, _Store_state, deepFreeze(initialState), "f");
     }
