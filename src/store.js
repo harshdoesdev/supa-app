@@ -1,4 +1,4 @@
-import { deepFreeze, isPlainObj, kindOf } from "./util.js";
+import { deepFreeze, isFn, isPlainObj, kindOf } from "./util.js";
 
 class Store {
 
@@ -17,6 +17,12 @@ class Store {
     }
 
     constructor(reducer, initialState) {
+        if(!isFn(reducer)) {
+            throw new Error(
+                `Reducer must be a function. Instead got: ${kindOf(reducer)}`
+            );
+        }
+
         this.reducer = reducer;
         this.#state = deepFreeze(initialState);
     }

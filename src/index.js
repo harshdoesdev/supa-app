@@ -1,3 +1,4 @@
+import { isFn } from "./util.js";
 import { h, patch, text, svg } from "./vdom.js";
 
 export { h, text, svg };
@@ -22,10 +23,22 @@ const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) =
     });
 };
 
-export function runApp({ node, store, view, subscriptions }) {
+function shouldRunEffect(prevFxDependencies, dependencies, effectId) {
+    if(!prevFxDependencies) {
+        return true;
+    }
+
+    return dependencies.every((dependency, depId) => {
+        const oldDependency = prevFxDependencies[effectId][depId];
+
+        return oldDependency !== dependency;
+    });
+}
+
+export function runApp({ node, store, view, effects, subscriptions }) {
     const dispatch = store.dispatch.bind(store);
 
-    let prevSubscriptions = [];
+    let prevSubscriptions = [], prevFxDependencies = null;
 
     let oldTree = null;
 
@@ -33,6 +46,32 @@ export function runApp({ node, store, view, subscriptions }) {
 
     function render() {
         requestAnimationFrame(update)
+    }
+
+    function updateEffects(currentState) {
+        const currentEffects = effects(currentState);
+        
+        prevFxDependencies = currentEffects.map(([effect, ...dependencies], effectId) => {
+            const shouldRun = shouldRunEffect(
+                prevFxDependencies,
+                dependencies,
+                effectId
+            );
+
+            if(shouldRun) {
+                effect(...dependencies);
+            }
+
+            return dependencies;
+        });
+    }
+
+    function updateSubscriptions(currentState) {
+        prevSubscriptions = patchSubscriptions(
+            prevSubscriptions,
+            subscriptions(currentState),
+            dispatch
+        );
     }
 
     function update() {
@@ -44,15 +83,13 @@ export function runApp({ node, store, view, subscriptions }) {
 
         oldTree = newTree;
 
-        if(typeof subscriptions !== 'function') {
-            return;
+        if(isFn(effects)) {
+            updateEffects(currentState);
         }
 
-        prevSubscriptions = patchSubscriptions(
-            prevSubscriptions,
-            subscriptions(currentState),
-            dispatch
-        );
+        if(isFn(subscriptions)) {
+            updateSubscriptions(currentState);
+        }
     }
 
     render();
