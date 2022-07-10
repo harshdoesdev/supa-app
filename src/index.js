@@ -24,7 +24,7 @@ const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) =
 };
 
 function shouldRunEffect(prevFxDependencies, dependencies, effectId) {
-    if(!prevFxDependencies) {
+    if(!prevFxDependencies || !prevFxDependencies[effectId]) {
         return true;
     }
 
@@ -51,7 +51,13 @@ export function runApp({ node, store, view, effects, subscriptions }) {
     function updateEffects(currentState) {
         const currentEffects = effects(currentState);
         
-        prevFxDependencies = currentEffects.map(([effect, ...dependencies], effectId) => {
+        prevFxDependencies = currentEffects.map((fx, effectId) => {
+            if(!fx) {
+                return;
+            }
+
+            const [effect, ...dependencies] = fx;
+            
             const shouldRun = shouldRunEffect(
                 prevFxDependencies,
                 dependencies,
