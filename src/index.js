@@ -7,7 +7,7 @@ const patchSubscriptions = (
     currentState, 
     prevSubscriptions, 
     currentSubscriptions, 
-    dispatch
+    setState
 ) => {
    return currentSubscriptions.map((subscribe, i) => {
         const unsubscribe = prevSubscriptions[i];
@@ -19,7 +19,7 @@ const patchSubscriptions = (
         ) {
             unsubscribe();
         } else if(subscribe && !unsubscribe) {
-            return subscribe(currentState, dispatch);
+            return subscribe(currentState, setState);
         } else if(subscribe && unsubscribe) {
             return unsubscribe;
         }

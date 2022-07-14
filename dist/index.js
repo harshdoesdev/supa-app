@@ -1,7 +1,7 @@
 import { isFn } from "./util.js";
 import { h, patch, text, svg } from "./vdom.js";
 export { h, text, svg };
-const patchSubscriptions = (currentState, prevSubscriptions, currentSubscriptions, dispatch) => {
+const patchSubscriptions = (currentState, prevSubscriptions, currentSubscriptions, setState) => {
     return currentSubscriptions.map((subscribe, i) => {
         const unsubscribe = prevSubscriptions[i];
         if (unsubscribe &&
@@ -10,7 +10,7 @@ const patchSubscriptions = (currentState, prevSubscriptions, currentSubscription
             unsubscribe();
         }
         else if (subscribe && !unsubscribe) {
-            return subscribe(currentState, dispatch);
+            return subscribe(currentState, setState);
         }
         else if (subscribe && unsubscribe) {
             return unsubscribe;
