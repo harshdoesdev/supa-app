@@ -1,11 +1,11 @@
-export function h(type: any, props?: {}, ...children: any[]): {
+export function h(type: any, props: any, ...children: any[]): {
     type: any;
-    props: {};
+    props: any;
     children: any[];
 };
-export function svg(type: any, props?: {}, ...children: any[]): {
+export function svg(type: any, props: any, ...children: any[]): {
     type: any;
-    props: {};
+    props: any;
     children: any[];
     isSvg: boolean;
 };

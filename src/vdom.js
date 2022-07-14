@@ -1,14 +1,38 @@
+import { kindOf } from "./util.js";
+
 const TEXT_NODE = '#text';
 
-const ns = 'http://www.w3.org/2000/svg';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const EVENT_LISTENER_RGX = /^on/;
 
-export const h = (type, props = {}, ...children) => ({ type, props, children });
+export const h = (type, props, ...children) => ({ type, props, children });
 
-export const svg = (type, props = {}, ...children) => ({ type, props, children, isSvg: true });
+export const svg = (type, props, ...children) => ({ type, props, children, isSvg: true });
 
 export const text = data => ({ type: TEXT_NODE, data });
+
+const propIsCSSVar = v => v[0] === '-';
+
+const patchStyles = (node, oldStyles, newStyles) => {
+    const styles = { ...oldStyles, ...newStyles };
+
+    for(const [prop, value] of Object.entries(styles)) {
+        const oldStyleValue = oldStyles[prop];
+
+        if(newStyles[prop]) {
+            if(oldStyleValue !== value) {
+                if(propIsCSSVar(prop)) {
+                    node.style.setProperty(prop, value);
+                } else {
+                    node.style[prop] = value;
+                }
+            }
+        } else {
+            node.style.removeProperty(prop);
+        }
+    }
+};
 
 const strToClassList = str => str.trim().split(/\s+/);
 
@@ -31,6 +55,8 @@ const setProp = (node, key, value, isSvg = false) => {
 
     } else if(value == null || value === false) {
         node.removeAttribute(key);
+    } else if(key === 'style' && kindOf(value) !== 'string') {
+        patchStyles(node, {}, value);
     } else {
         if(isSvg) {
             if(EVENT_LISTENER_RGX.test(key)) {
@@ -60,7 +86,7 @@ const createDomNode = (vnode) => {
     const { type, props, children } = vnode;
 
     const node = vnode.isSvg 
-        ? document.createElementNS(ns, type) 
+        ? document.createElementNS(SVG_NS, type) 
         : document.createElement(type);
 
     for(const [key, value] of Object.entries(props)) {
@@ -116,7 +142,7 @@ const patchProps = (node, oldProps, newProps, isSvg = false) => {
     const props = { ...oldProps, ...newProps };
 
     for(const [key, value] of Object.entries(props)) {
-        if(Reflect.has(newProps, key)) {
+        if(newProps[key]) {
             const oldValue = oldProps[key];
 
             if(oldValue !== value) {
@@ -125,6 +151,12 @@ const patchProps = (node, oldProps, newProps, isSvg = false) => {
                         node, 
                         strToClassList(oldValue), 
                         strToClassList(value)
+                    );
+                } else if(key === 'style' && kindOf(value) !== 'string') {
+                    patchStyles(
+                        node,
+                        oldValue,
+                        value
                     );
                 } else {
                     setProp(node, key, value, isSvg);
