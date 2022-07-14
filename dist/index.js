@@ -2,7 +2,7 @@ import { isFn } from "./util.js";
 import { h, patch, text, svg } from "./vdom.js";
 export { h, text, svg };
 export { createStore } from './store.js';
-const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) => {
+const patchSubscriptions = (currentState, prevSubscriptions, currentSubscriptions, dispatch) => {
     return currentSubscriptions.map((subscribe, i) => {
         const unsubscribe = prevSubscriptions[i];
         if (unsubscribe &&
@@ -11,7 +11,7 @@ const patchSubscriptions = (prevSubscriptions, currentSubscriptions, dispatch) =
             unsubscribe();
         }
         else if (subscribe && !unsubscribe) {
-            return subscribe(dispatch);
+            return subscribe(currentState, dispatch);
         }
         else if (subscribe && unsubscribe) {
             return unsubscribe;
@@ -31,9 +31,13 @@ export function runApp({ node, store, view, effects, subscriptions }) {
     const dispatch = store.dispatch.bind(store);
     let prevSubscriptions = [], prevFxDependencies = null;
     let oldTree = null;
+    let id = null;
     store.subscribe(render);
     function render() {
-        requestAnimationFrame(update);
+        if (id) {
+            cancelAnimationFrame(id);
+        }
+        id = requestAnimationFrame(update);
     }
     function updateEffects(currentState) {
         const currentEffects = effects(currentState);
@@ -50,7 +54,7 @@ export function runApp({ node, store, view, effects, subscriptions }) {
         });
     }
     function updateSubscriptions(currentState) {
-        prevSubscriptions = patchSubscriptions(prevSubscriptions, subscriptions(currentState), dispatch);
+        prevSubscriptions = patchSubscriptions(currentState, prevSubscriptions, subscriptions(currentState), dispatch);
     }
     function update() {
         const currentState = store.currentState;
