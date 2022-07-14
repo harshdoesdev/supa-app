@@ -134,40 +134,40 @@ const patchProps = (node, oldProps, newProps, isSvg = false) => {
         }
     }
 };
+const destroyVNode = vnode => {
+    if (vnode.type !== TEXT_NODE) {
+        let child;
+        while (child = vnode.node.lastChild) {
+            child.remove();
+        }
+    }
+    vnode.node.remove();
+    vnode.node = null;
+};
 export const patch = (rootNode, oldTree, newTree) => {
     if (!oldTree && newTree) {
         const node = createDomNode(newTree);
         rootNode.appendChild(node);
-        newTree.node = node;
     }
     else if (!newTree) {
-        if (oldTree.type !== TEXT_NODE) {
-            let child;
-            while (child = oldTree.node.lastChild) {
-                child.remove();
+        destroyVNode(oldTree);
+    }
+    else if (oldTree.type === newTree.type) {
+        if (oldTree.type === TEXT_NODE &&
+            newTree.type === TEXT_NODE) {
+            if (oldTree.data !== newTree.data) {
+                oldTree.node.data = newTree.data;
             }
         }
-        oldTree.node.remove();
-        oldTree.node = null;
-    }
-    else if (oldTree.type === TEXT_NODE &&
-        newTree.type === TEXT_NODE) {
-        if (oldTree.data !== newTree.data) {
-            oldTree.node.data = newTree.data;
+        else if (oldTree.key === newTree.key) {
+            patchChildren(oldTree.node, oldTree.children, newTree.children);
+            patchProps(oldTree.node, oldTree.props, newTree.props, newTree.isSvg);
         }
-        newTree.node = oldTree.node;
-    }
-    else if (oldTree.type === newTree.type &&
-        oldTree.key === newTree.key) {
-        patchChildren(oldTree.node, oldTree.children, newTree.children);
-        patchProps(oldTree.node, oldTree.props, newTree.props, newTree.isSvg);
         newTree.node = oldTree.node;
     }
     else {
         const newNode = createDomNode(newTree);
         rootNode.insertBefore(newNode, oldTree.node);
-        oldTree.node.remove();
-        oldTree.node = null;
-        newTree.node = newNode;
+        destroyVNode(oldTree);
     }
 };

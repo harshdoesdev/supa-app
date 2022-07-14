@@ -1,7 +1,6 @@
 import { isFn } from "./util.js";
 import { h, patch, text, svg } from "./vdom.js";
 export { h, text, svg };
-export { createStore } from './store.js';
 const patchSubscriptions = (currentState, prevSubscriptions, currentSubscriptions, dispatch) => {
     return currentSubscriptions.map((subscribe, i) => {
         const unsubscribe = prevSubscriptions[i];
@@ -27,12 +26,15 @@ function shouldRunEffect(prevFxDependencies, dependencies, effectId) {
         return oldDependency !== dependency;
     });
 }
-export function runApp({ node, store, view, effects, subscriptions }) {
-    const dispatch = store.dispatch.bind(store);
+export function runApp({ node, state, view, effects, subscriptions }) {
+    let currentState = null;
     let prevSubscriptions = [], prevFxDependencies = null;
     let oldTree = null;
     let id = null;
-    store.subscribe(render);
+    function setState(newState) {
+        currentState = isFn(newState) ? newState(currentState) : newState;
+        render();
+    }
     function render() {
         if (id) {
             cancelAnimationFrame(id);
@@ -54,11 +56,10 @@ export function runApp({ node, store, view, effects, subscriptions }) {
         });
     }
     function updateSubscriptions(currentState) {
-        prevSubscriptions = patchSubscriptions(currentState, prevSubscriptions, subscriptions(currentState), dispatch);
+        prevSubscriptions = patchSubscriptions(currentState, prevSubscriptions, subscriptions(currentState), setState);
     }
     function update() {
-        const currentState = store.currentState;
-        const newTree = view(currentState, dispatch);
+        const newTree = view(currentState, setState);
         patch(node, oldTree, newTree);
         oldTree = newTree;
         if (isFn(effects)) {
@@ -68,5 +69,5 @@ export function runApp({ node, store, view, effects, subscriptions }) {
             updateSubscriptions(currentState);
         }
     }
-    render();
+    setState(state);
 }

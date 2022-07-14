@@ -3,8 +3,6 @@ import { h, patch, text, svg } from "./vdom.js";
 
 export { h, text, svg };
 
-export { createStore } from './store.js';
-
 const patchSubscriptions = (
     currentState, 
     prevSubscriptions, 
@@ -40,8 +38,8 @@ function shouldRunEffect(prevFxDependencies, dependencies, effectId) {
     });
 }
 
-export function runApp({ node, store, view, effects, subscriptions }) {
-    const dispatch = store.dispatch.bind(store);
+export function runApp({ node, state, view, effects, subscriptions }) {
+    let currentState = null;
 
     let prevSubscriptions = [], prevFxDependencies = null;
 
@@ -49,7 +47,10 @@ export function runApp({ node, store, view, effects, subscriptions }) {
 
     let id = null;
 
-    store.subscribe(render);
+    function setState(newState) {
+        currentState = isFn(newState) ? newState(currentState) : newState;
+        render();
+    }
 
     function render() {
         if(id) {
@@ -88,14 +89,12 @@ export function runApp({ node, store, view, effects, subscriptions }) {
             currentState,
             prevSubscriptions,
             subscriptions(currentState),
-            dispatch
+            setState
         );
     }
 
     function update() {
-        const currentState = store.currentState;
-
-        const newTree = view(currentState, dispatch);
+        const newTree = view(currentState, setState);
 
         patch(node, oldTree, newTree);
 
@@ -110,5 +109,5 @@ export function runApp({ node, store, view, effects, subscriptions }) {
         }
     }
 
-    render();
+    setState(state);
 }
