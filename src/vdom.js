@@ -189,10 +189,7 @@ export const patch = (rootNode, oldTree, newTree) => {
     } else if(!newTree) {
         destroyVNode(oldTree);
     } else if(oldTree.type === newTree.type) {
-        if(
-            oldTree.type === TEXT_NODE && 
-            newTree.type === TEXT_NODE
-        ) {
+        if(oldTree.type === TEXT_NODE) {
             if(oldTree.data !== newTree.data) {
                 oldTree.node.data = newTree.data;
             }
