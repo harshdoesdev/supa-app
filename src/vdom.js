@@ -12,7 +12,7 @@ export const svg = (type, props, ...children) => ({ type, props, children, isSvg
 
 export const text = data => ({ type: TEXT_NODE, data });
 
-const propIsCSSVar = v => v[0] === '-';
+const propIsCSSVar = v => v[0] === '-' && v[1] === '-';
 
 const patchStyles = (node, oldStyles, newStyles) => {
     const styles = { ...oldStyles, ...newStyles };
