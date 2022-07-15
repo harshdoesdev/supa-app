@@ -142,7 +142,7 @@ const patchProps = (node, oldProps, newProps, isSvg = false) => {
     const props = { ...oldProps, ...newProps };
 
     for(const [key, value] of Object.entries(props)) {
-        if(newProps[key]) {
+        if(Reflect.has(newProps, key)) {
             const oldValue = oldProps[key];
 
             if(oldValue !== value) {
