@@ -21,7 +21,7 @@ function shouldRunEffect(prevFxDependencies, dependencies) {
     if (!prevFxDependencies) {
         return true;
     }
-    return dependencies.every((dependency, depId) => {
+    return dependencies.some((dependency, depId) => {
         const oldDependency = prevFxDependencies[depId];
         return oldDependency !== dependency;
     });
