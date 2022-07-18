@@ -26,13 +26,13 @@ const patchSubscriptions = (
     });
 };
 
-function shouldRunEffect(prevFxDependencies, dependencies, effectId) {
-    if(!prevFxDependencies || !prevFxDependencies[effectId]) {
+function shouldRunEffect(prevFxDependencies, dependencies) {
+    if(!prevFxDependencies) {
         return true;
     }
 
     return dependencies.every((dependency, depId) => {
-        const oldDependency = prevFxDependencies[effectId][depId];
+        const oldDependency = prevFxDependencies[depId];
 
         return oldDependency !== dependency;
     });
@@ -71,13 +71,12 @@ export function runApp({ node, state, view, effects, subscriptions }) {
             const [effect, ...dependencies] = fx;
             
             const shouldRun = shouldRunEffect(
-                prevFxDependencies,
-                dependencies,
-                effectId
+                prevFxDependencies && prevFxDependencies[effectId],
+                dependencies
             );
 
             if(shouldRun) {
-                effect(...dependencies);
+                effect(setState, ...dependencies);
             }
 
             return dependencies;
