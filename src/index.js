@@ -1,4 +1,4 @@
-import { isFn } from "./util.js";
+import { deepFreeze, isFn } from "./util.js";
 import { h, patch, text, svg } from "./vdom.js";
 
 export { h, text, svg };
@@ -38,7 +38,15 @@ function shouldRunEffect(prevFxDependencies, dependencies) {
     });
 }
 
-export function runApp({ node, state, view, effects, subscriptions }) {
+export function runApp({ node, state, effects, subscriptions, view }) {
+    if(!node) {
+        throw new Error('node cannot be null.');
+    }
+
+    if(!isFn(view)) {
+        throw new Error('view must be a function.')
+    }
+
     let currentState = null;
 
     let prevSubscriptions = [], prevFxDependencies = null;
@@ -48,7 +56,10 @@ export function runApp({ node, state, view, effects, subscriptions }) {
     let id = null;
 
     function setState(newState) {
-        currentState = isFn(newState) ? newState(currentState) : newState;
+        const nextState = isFn(newState) ? newState(currentState) : newState;
+
+        currentState = deepFreeze(nextState);
+
         render();
     }
 
